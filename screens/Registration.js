@@ -7,17 +7,62 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
+  Alert,
 } from 'react-native';
 import React, {useState} from 'react';
 import InputTextField from '../Common/InputTextField';
 import {Colors} from '../Utils/Constants';
+import {MaterialIcons} from '@react-native-vector-icons/material-icons';
+import {addUser} from '../Utils/Service/Storage';
+import {useNavigation} from '@react-navigation/native';
+import {Dropdown} from 'react-native-element-dropdown';
 
 const Registration = () => {
+  const [name, setName] = useState('');
+  const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
-
+  const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
-  const [savePassword, setSavePassword] = useState(false);
-  const [roleData, SetRoleData] = useState(null);
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const navigation = useNavigation();
+
+  handelSubmit = async () => {
+    if (!name || !mobile || !email || !password || !confirmPassword) {
+      Alert.alert('Error', 'All fields are required');
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert('Check', 'Password do not match');
+      return;
+    }
+
+    const newUser = {name, mobile, email, address, password};
+
+    const result = await addUser(newUser);
+
+    if (result.success) {
+      Alert.alert('Success', result.message, [
+        {
+          text: 'OK',
+          onPress: () => {
+            // Navigate to Login screen after registration
+            navigation.navigate('LoginScreen'); // Make sure you have a screen named 'Login' in your stack
+          },
+        },
+      ]);
+      // ফর্ম clear
+      setName('');
+      setMobile('');
+      setEmail('');
+      setAddress('');
+      setPassword('');
+      setConfirmPassword('');
+    } else {
+      Alert.alert('Error', result.message);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
@@ -37,40 +82,41 @@ const Registration = () => {
 
           <InputTextField
             label="Name"
-            value={email}
-            onChangeText={setEmail}
+            value={name}
+            onChangeText={setName}
             placeholder="Your full name"
           />
+
           <InputTextField
             label="Mobile"
-            value={email}
-            onChangeText={setEmail}
+            value={mobile}
+            onChangeText={setMobile}
             placeholder="Your mobile number"
           />
           <InputTextField
-            label="Email Address"
+            label="Email"
             value={email}
             onChangeText={setEmail}
             placeholder="Your email address"
           />
           <InputTextField
             label="Address"
-            value={email}
-            onChangeText={setEmail}
+            value={address}
+            onChangeText={setAddress}
             placeholder="Your permanent address"
           />
           <InputTextField
             label="Password"
-            value={email}
-            onChangeText={setEmail}
+            value={password}
+            onChangeText={setPassword}
             placeholder="******"
           />
 
           {/* Email Input */}
           <InputTextField
             label="Confirm Password"
-            value={email}
-            onChangeText={setEmail}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
             placeholder="******"
           />
 
@@ -93,9 +139,6 @@ const Registration = () => {
           {/* Save Password & Forgot */}
 
           {/* Login Button */}
-          <TouchableOpacity style={styles.loginBtn}>
-            <Text style={styles.loginBtnText}>Login Account</Text>
-          </TouchableOpacity>
 
           {/* Create Account */}
           {/* <TouchableOpacity onPress={() => navigation.navigate('Registration')}>
@@ -103,6 +146,9 @@ const Registration = () => {
           </TouchableOpacity> */}
         </View>
       </ScrollView>
+      <TouchableOpacity style={styles.loginBtn} onPress={handelSubmit}>
+        <Text style={styles.loginBtnText}>Login Account</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
